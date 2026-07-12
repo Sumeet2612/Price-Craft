@@ -1,12 +1,15 @@
 import React from 'react'
 import { ChevronRight } from 'lucide-react'
+import Cartitem from './Cartitem'
+
 
 const MainContent = () => {
   const steps = ['Cart', 'Shipping', 'Payment']
   const currentStep = 'Cart'
+  
 
   return (
-    <div className='bg-orange-50 pb-10'>
+    <div className=' pb-10'>
       {/* Breadcrumb */}
       <div className='flex items-center gap-1 pt-5 px-7.5 text-sm text-gray-400 cursor-pointer'>
         <span className='hover:text-gray-600'>Home</span>
@@ -40,6 +43,14 @@ const MainContent = () => {
       </div> 
 
       <hr className='mx-7.5 mt-4 border-t border-orange-200' />
+      <div className='bg-white mx-7 px-6 py-6 mt-6 col-auto'>
+        My Cart(4)
+        <hr className='mx-4.5 mt-6 mb-3' />
+        <Cartitem />
+      </div>
+      <div>
+        
+      </div>
     </div>
   )
 }

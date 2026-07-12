@@ -1,12 +1,84 @@
-import React from 'react'
+// MainContent.jsx
+import React, { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import Cartitem from './Cartitem'
-
+import One8 from '../../assets/one8shoes.jpeg'
+import One82 from '../../assets/oneshoes2.jpeg'
+import Nike1 from '../../assets/nikealphashoes.jpeg'
+import Nike2 from '../../assets/nikejordan.jpeg'
 
 const MainContent = () => {
   const steps = ['Cart', 'Shipping', 'Payment']
   const currentStep = 'Cart'
-  
+
+  const [items, setItems] = useState([
+    {
+      id: 1,
+      img: One8,
+      name: 'Seam XVIII Signature',
+      category: 'One8',
+      color: 'Black',
+      size: 'UK 7',
+      originalPrice: 770,
+      discountPercent: 10,
+      quantity: 1
+    },
+    {
+      id: 2,
+      img: One82,
+      name: 'Seam XVIII Signature',
+      category: 'One8',
+      color: 'White',
+      size: 'UK 7',
+      originalPrice: 770,
+      discountPercent: 10,
+      quantity: 1
+    },
+    {
+      id: 3,
+      img: Nike1,
+      name: 'Alpha Fly',
+      category: 'Nike',
+      color: 'Blue',
+      size: 'UK 8',
+      originalPrice: 950,
+      discountPercent: 15,
+      quantity: 1
+    },
+    {
+      id: 4,
+      img: Nike2,
+      name: 'Air Jordan',
+      category: 'Nike',
+      color: 'Red',
+      size: 'UK 9',
+      originalPrice: 1200,
+      discountPercent: 20,
+      quantity: 2
+    }
+  ])
+
+  const handleIncrement = (id) => {
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+      )
+    )
+  }
+
+  const handleDecrement = (id) => {
+    setItems((prevItems) =>
+      prevItems
+        .map((item) =>
+          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+        )
+        .filter((item) => item.quantity > 0)
+    )
+  }
+
+  const handleRemove = (id) => {
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id))
+  }
 
   return (
     <div className=' pb-10'>
@@ -40,16 +112,18 @@ const MainContent = () => {
       {/* Heading */}
       <div className='mt-10 px-7.5 text-2xl font-semibold text-gray-800'>
         My Cart
-      </div> 
+      </div>
 
       <hr className='mx-7.5 mt-4 border-t border-orange-200' />
       <div className='bg-white mx-7 px-6 py-6 mt-6 col-auto'>
-        My Cart(4)
+        My Cart({items.length})
         <hr className='mx-4.5 mt-6 mb-3' />
-        <Cartitem />
-      </div>
-      <div>
-        
+        <Cartitem
+          items={items}
+          onIncrement={handleIncrement}
+          onDecrement={handleDecrement}
+          onRemove={handleRemove}
+        />
       </div>
     </div>
   )

@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import Cartitem from './Cartitem'
 import Ordersummary from './Ordersummary'
+import { applyCoupon, calculateSubtotal } from '../../utils/discountEngine'
 
 import One8 from '../../assets/one8shoes.jpeg'
 import One82 from '../../assets/oneshoes2.jpeg'
@@ -59,21 +60,15 @@ const MainContent = () => {
     }
   ])
 
-  // ============================
-  // ORDER SUMMARY STATES
-  // ============================
-
   const [tip, setTip] = useState(4)
-
-  const [deliveryMethod, setDeliveryMethod] =
-    useState('delivery')
-
-  const [useCredit, setUseCredit] =
-    useState(true)
-
-  // ============================
-  // CART FUNCTIONS
-  // ============================
+  const [deliveryMethod, setDeliveryMethod] = useState('delivery')
+  const [useCredit, setUseCredit] = useState(true)
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupons, setAppliedCoupons] = useState([])
+  const [couponStatus, setCouponStatus] = useState({
+    type: 'idle',
+    message: 'Apply a coupon to unlock extra savings.'
+  })
 
   const handleIncrement = (id) => {
     setItems((prevItems) =>
@@ -104,58 +99,78 @@ const MainContent = () => {
   }
 
   const handleRemove = (id) => {
-    setItems((prevItems) =>
-      prevItems.filter((item) => item.id !== id)
-    )
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id))
   }
 
-  // ============================
-  // PRICE CALCULATIONS
-  // ============================
+  const subtotal = useMemo(() => calculateSubtotal(items), [items])
 
-  const subtotal = items.reduce((total, item) => {
-    const discountedPrice =
-      item.originalPrice *
-      (1 - item.discountPercent / 100)
+  const couponSummary = useMemo(() => {
+    let remainingSubtotal = subtotal
+    let totalDiscount = 0
+    const validCoupons = []
 
-    return total + discountedPrice * item.quantity
-  }, 0)
+    for (const code of appliedCoupons) {
+      const result = applyCoupon(items, remainingSubtotal, code, validCoupons)
 
-  const deliveryFee =
-    deliveryMethod === 'delivery' ? 7.99 : 0
+      if (!result.success) {
+        break
+      }
 
-  const serviceFee = subtotal * 0.03
+      remainingSubtotal = result.finalTotal
+      totalDiscount += result.discount
+      validCoupons.push(code)
+    }
 
-  const tax = subtotal * 0.12
+    return {
+      totalDiscount,
+      discountedSubtotal: Math.max(remainingSubtotal, 0),
+      validCoupons,
+    }
+  }, [appliedCoupons, items, subtotal])
 
+  const handleApplyCoupon = () => {
+    const trimmedCode = couponCode.trim().toUpperCase()
+
+    if (!trimmedCode) {
+      setCouponStatus({ type: 'error', message: 'Please enter a coupon code.' })
+      return
+    }
+
+    const result = applyCoupon(items, subtotal - couponSummary.totalDiscount, trimmedCode, couponSummary.validCoupons)
+
+    if (result.success) {
+      setAppliedCoupons(result.appliedCoupons)
+      setCouponStatus({
+        type: 'success',
+        message: `${trimmedCode} applied. You saved $${result.discount.toFixed(2)}.`
+      })
+      setCouponCode('')
+      return
+    }
+
+    setCouponStatus({ type: 'error', message: result.message })
+  }
+
+  const handleRemoveCoupon = (codeToRemove) => {
+    const updatedCoupons = appliedCoupons.filter((code) => code !== codeToRemove)
+    setAppliedCoupons(updatedCoupons)
+    setCouponStatus({ type: 'success', message: `${codeToRemove} removed.` })
+  }
+
+  const discountedSubtotal = couponSummary.discountedSubtotal
+  const deliveryFee = deliveryMethod === 'delivery' ? 7.99 : 0
+  const serviceFee = discountedSubtotal * 0.03
+  const tax = discountedSubtotal * 0.12
   const credits = useCredit ? 8 : 0
-
-  const total =
-    subtotal +
-    deliveryFee +
-    serviceFee +
-    tax +
-    tip -
-    credits
+  const total = discountedSubtotal + deliveryFee + serviceFee + tax + tip - credits
 
   return (
     <div className="pb-10">
-
-      {/* Breadcrumb */}
-
       <div className="flex items-center gap-1 pt-5 px-7.5 text-sm text-gray-400 cursor-pointer">
-        <span className="hover:text-gray-600">
-          Home
-        </span>
-
+        <span className="hover:text-gray-600">Home</span>
         <ChevronRight size={14} />
-
-        <span className="hover:text-gray-600">
-          Stores
-        </span>
+        <span className="hover:text-gray-600">Stores</span>
       </div>
-
-      {/* Steps */}
 
       <div className="flex items-center justify-center gap-3 mt-10">
         {steps.map((step, index) => (
@@ -177,41 +192,26 @@ const MainContent = () => {
         ))}
       </div>
 
-      {/* Heading */}
-
       <div className="mt-10 px-7.5 text-2xl font-semibold text-gray-800">
         My Cart
       </div>
 
-      {/* Main Layout */}
-
       <div className="flex gap-8 mx-7 mt-6 items-start">
-
-        {/* Left Side */}
-
         <div className="flex-1 bg-white px-6 py-6">
-
-          <h2 className="text-xl mb-4">
-            My Cart ({items.length})
-          </h2>
-
+          <h2 className="text-xl mb-4">My Cart ({items.length})</h2>
           <hr className="mb-6" />
-
           <Cartitem
             items={items}
             onIncrement={handleIncrement}
             onDecrement={handleDecrement}
             onRemove={handleRemove}
           />
-
         </div>
 
-        {/* Right Side */}
-
         <div className="w-[340px] shrink-0">
-
           <Ordersummary
             subtotal={subtotal}
+            discountedSubtotal={discountedSubtotal}
             itemCount={items.length}
             deliveryFee={deliveryFee}
             serviceFee={serviceFee}
@@ -220,15 +220,19 @@ const MainContent = () => {
             total={total}
             useCredit={useCredit}
             deliveryMethod={deliveryMethod}
+            couponCode={couponCode}
+            couponStatus={couponStatus}
+            discountAmount={couponSummary.totalDiscount}
+            appliedCoupons={appliedCoupons}
+            setCouponCode={setCouponCode}
             setTip={setTip}
             setUseCredit={setUseCredit}
             setDeliveryMethod={setDeliveryMethod}
+            onApplyCoupon={handleApplyCoupon}
+            onRemoveCoupon={handleRemoveCoupon}
           />
-
         </div>
-
       </div>
-
     </div>
   )
 }

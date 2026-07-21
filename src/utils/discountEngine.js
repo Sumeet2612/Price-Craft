@@ -117,7 +117,7 @@ export const applyCoupon = (
   if (!hasMinimumCartValue(cartSubtotal, coupon)) {
     return {
       success: false,
-      message: `Minimum cart value should be ₹${coupon.condition.minCartValue}`,
+      message: `Minimum cart value should be Rs. ${coupon.condition.minCartValue}`,
       discount: 0,
       finalTotal: cartSubtotal,
       appliedCoupons: existingCodes,

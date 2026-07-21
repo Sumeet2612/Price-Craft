@@ -1,5 +1,6 @@
-import React from "react";
 import { AlertCircle, CheckCircle2, Tag, X } from "lucide-react";
+
+const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`;
 
 const Ordersummary = ({
   subtotal,
@@ -91,19 +92,19 @@ const Ordersummary = ({
 
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-500">Subtotal ({itemCount} items)</span>
-          <span className="font-semibold">${subtotal.toFixed(2)}</span>
+          <span className="font-semibold">{formatRupees(subtotal)}</span>
         </div>
 
         {discountAmount > 0 ? (
           <div className="flex justify-between items-center text-sm mt-3 text-green-600">
             <span>Discount</span>
-            <span className="font-semibold">-${discountAmount.toFixed(2)}</span>
+            <span className="font-semibold">-{formatRupees(discountAmount)}</span>
           </div>
         ) : null}
 
         <div className="flex justify-between items-center text-sm mt-3">
           <span className="text-gray-500">Discounted subtotal</span>
-          <span className="font-semibold">${discountedSubtotal.toFixed(2)}</span>
+          <span className="font-semibold">{formatRupees(discountedSubtotal)}</span>
         </div>
 
         <hr className="border-dashed my-5" />
@@ -120,7 +121,7 @@ const Ordersummary = ({
                 onChange={() => setDeliveryMethod("delivery")}
               />
 
-              <span>Delivery : ${deliveryFee.toFixed(2)}</span>
+              <span>Delivery : {formatRupees(deliveryFee)}</span>
             </label>
           </div>
 
@@ -153,44 +154,44 @@ const Ordersummary = ({
           <div className="grid grid-cols-3 gap-3">
             <label
               className={`border p-2 flex items-center gap-2 cursor-pointer ${
-                tip === 2 ? "border-orange-500" : ""
+                tip === 20 ? "border-orange-500" : ""
               }`}
             >
               <input
                 type="radio"
                 name="tip"
-                checked={tip === 2}
-                onChange={() => setTip(2)}
+                checked={tip === 20}
+                onChange={() => setTip(20)}
               />
-              $2
+              Rs. 20
             </label>
 
             <label
               className={`border p-2 flex items-center gap-2 cursor-pointer ${
-                tip === 4 ? "border-orange-500" : ""
+                tip === 40 ? "border-orange-500" : ""
               }`}
             >
               <input
                 type="radio"
                 name="tip"
-                checked={tip === 4}
-                onChange={() => setTip(4)}
+                checked={tip === 40}
+                onChange={() => setTip(40)}
               />
-              $4
+              Rs. 40
             </label>
 
             <label
               className={`border p-2 flex items-center gap-2 cursor-pointer ${
-                tip === 7 ? "border-orange-500" : ""
+                tip === 70 ? "border-orange-500" : ""
               }`}
             >
               <input
                 type="radio"
                 name="tip"
-                checked={tip === 7}
-                onChange={() => setTip(7)}
+                checked={tip === 70}
+                onChange={() => setTip(70)}
               />
-              $7
+              Rs. 70
             </label>
           </div>
         </div>
@@ -200,12 +201,12 @@ const Ordersummary = ({
         <div className="space-y-4 text-sm">
           <div className="flex justify-between">
             <span>Service Fee</span>
-            <span>${serviceFee.toFixed(2)}</span>
+            <span>{formatRupees(serviceFee)}</span>
           </div>
 
           <div className="flex justify-between">
             <span>Tax</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>{formatRupees(tax)}</span>
           </div>
 
           <div className="flex justify-between items-center">
@@ -217,7 +218,7 @@ const Ordersummary = ({
               />
               Use E-Markets Credits
             </label>
-            <span>$8.00</span>
+            <span>Rs. 80.00</span>
           </div>
         </div>
 
@@ -225,7 +226,7 @@ const Ordersummary = ({
 
         <div className="flex justify-between items-center text-xl font-semibold">
           <span>Total Payable</span>
-          <span>${total.toFixed(2)}</span>
+          <span>{formatRupees(total)}</span>
         </div>
 
         <button className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded font-semibold transition">

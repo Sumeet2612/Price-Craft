@@ -1,6 +1,7 @@
 // Cartitem.jsx
-import React from 'react'
 import { Minus, Plus, X } from 'lucide-react'
+
+const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`
 
 const Cartitem = ({ items, onIncrement, onDecrement, onRemove }) => {
   return (
@@ -33,10 +34,10 @@ const Cartitem = ({ items, onIncrement, onDecrement, onRemove }) => {
               </p>
               <p className='mt-1'>
                 <span className='text-gray-400 line-through mr-2'>
-                  ${elem.originalPrice}
+                  {formatRupees(elem.originalPrice)}
                 </span>
                 <span className='text-gray-800 font-semibold mr-2'>
-                  ${discountedPrice}
+                  {formatRupees(discountedPrice)}
                 </span>
                 <span className='text-orange-500 text-sm font-medium'>
                   {elem.discountPercent}% OFF

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { ChevronRight, Search, SlidersHorizontal, Star } from 'lucide-react'
 import Cartitem from './Cartitem'
 import Ordersummary from './Ordersummary'
 import { applyCoupon, calculateSubtotal } from '../../utils/discountEngine'
@@ -8,6 +8,145 @@ import One8 from '../../assets/one8shoes.jpeg'
 import One82 from '../../assets/oneshoes2.jpeg'
 import Nike1 from '../../assets/nikealphashoes.jpeg'
 import Nike2 from '../../assets/nikejordan.jpeg'
+
+const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`
+
+const getSalePrice = (product) => Math.round(
+  product.originalPrice * (1 - product.discountPercent / 100)
+)
+
+const products = [
+  {
+    id: 1,
+    img: One8,
+    name: 'One8 Drift Runner',
+    category: 'One8',
+    color: 'Black',
+    size: 'UK 7',
+    price: 6999,
+    originalPrice: 7799,
+    discountPercent: 10,
+    rating: 4.7,
+    createdAt: '2026-07-08'
+  },
+  {
+    id: 2,
+    img: One82,
+    name: 'One8 Court Sprint',
+    category: 'One8',
+    color: 'White',
+    size: 'UK 7',
+    price: 6299,
+    originalPrice: 6999,
+    discountPercent: 10,
+    rating: 4.4,
+    createdAt: '2026-06-26'
+  },
+  {
+    id: 3,
+    img: Nike1,
+    name: 'Nike Alpha Fly',
+    category: 'Nike',
+    color: 'Blue',
+    size: 'UK 8',
+    price: 11899,
+    originalPrice: 13999,
+    discountPercent: 15,
+    rating: 4.8,
+    createdAt: '2026-07-15'
+  },
+  {
+    id: 4,
+    img: Nike2,
+    name: 'Nike Air Jordan',
+    category: 'Nike',
+    color: 'Red',
+    size: 'UK 9',
+    price: 12799,
+    originalPrice: 15999,
+    discountPercent: 20,
+    rating: 4.9,
+    createdAt: '2026-07-19'
+  },
+  {
+    id: 5,
+    img: Nike1,
+    name: 'Nike Tempo Glide',
+    category: 'Nike',
+    color: 'Silver',
+    size: 'UK 8',
+    price: 8999,
+    originalPrice: 9999,
+    discountPercent: 10,
+    rating: 4.6,
+    createdAt: '2026-07-13'
+  },
+  {
+    id: 6,
+    img: One8,
+    name: 'One8 Urban Walk',
+    category: 'One8',
+    color: 'Grey',
+    size: 'UK 6',
+    price: 5599,
+    originalPrice: 6999,
+    discountPercent: 20,
+    rating: 4.3,
+    createdAt: '2026-07-01'
+  },
+  {
+    id: 7,
+    img: One82,
+    name: 'Adidas Swift Court',
+    category: 'Adidas',
+    color: 'White',
+    size: 'UK 9',
+    price: 7499,
+    originalPrice: 9999,
+    discountPercent: 25,
+    rating: 4.5,
+    createdAt: '2026-07-17'
+  },
+  {
+    id: 8,
+    img: Nike2,
+    name: 'Puma Street Rider',
+    category: 'Puma',
+    color: 'Black',
+    size: 'UK 10',
+    price: 6399,
+    originalPrice: 7999,
+    discountPercent: 20,
+    rating: 4.2,
+    createdAt: '2026-06-20'
+  },
+  {
+    id: 9,
+    img: Nike1,
+    name: 'Adidas Aero Boost',
+    category: 'Adidas',
+    color: 'Blue',
+    size: 'UK 8',
+    price: 10499,
+    originalPrice: 13999,
+    discountPercent: 25,
+    rating: 4.8,
+    createdAt: '2026-07-20'
+  },
+  {
+    id: 10,
+    img: One8,
+    name: 'Puma Flex Runner',
+    category: 'Puma',
+    color: 'Orange',
+    size: 'UK 7',
+    price: 4799,
+    originalPrice: 5999,
+    discountPercent: 20,
+    rating: 4.1,
+    createdAt: '2026-06-12'
+  }
+]
 
 const createEmptyShippingForm = () => ({
   fullName: '',
@@ -29,54 +168,14 @@ const MainContent = () => {
   const steps = ['Cart Review', 'Shipping Info', 'Payment', 'Order Confirmation']
 
   const [currentStep, setCurrentStep] = useState(0)
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      img: One8,
-      name: 'Seam XVIII Signature',
-      category: 'One8',
-      color: 'Black',
-      size: 'UK 7',
-      originalPrice: 770,
-      discountPercent: 10,
-      quantity: 1
-    },
-    {
-      id: 2,
-      img: One82,
-      name: 'Seam XVIII Signature',
-      category: 'One8',
-      color: 'White',
-      size: 'UK 7',
-      originalPrice: 770,
-      discountPercent: 10,
-      quantity: 1
-    },
-    {
-      id: 3,
-      img: Nike1,
-      name: 'Alpha Fly',
-      category: 'Nike',
-      color: 'Blue',
-      size: 'UK 8',
-      originalPrice: 950,
-      discountPercent: 15,
-      quantity: 1
-    },
-    {
-      id: 4,
-      img: Nike2,
-      name: 'Air Jordan',
-      category: 'Nike',
-      color: 'Red',
-      size: 'UK 9',
-      originalPrice: 1200,
-      discountPercent: 20,
-      quantity: 2
-    }
-  ])
+  const [items, setItems] = useState(products.slice(0, 4).map((product) => ({ ...product, quantity: product.id === 4 ? 2 : 1 })))
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [maxPrice, setMaxPrice] = useState(16000)
+  const [sortBy, setSortBy] = useState('newest')
 
-  const [tip, setTip] = useState(4)
+  const [tip, setTip] = useState(40)
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
   const [useCredit, setUseCredit] = useState(true)
   const [couponCode, setCouponCode] = useState('')
@@ -88,6 +187,37 @@ const MainContent = () => {
   const [shippingForm, setShippingForm] = useState(createEmptyShippingForm())
   const [paymentForm, setPaymentForm] = useState(createEmptyPaymentForm())
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [searchTerm])
+
+  const categories = useMemo(() => ['All', ...new Set(products.map((product) => product.category))], [])
+
+  const visibleProducts = useMemo(() => {
+    const normalizedSearch = debouncedSearchTerm.trim().toLowerCase()
+
+    return products
+      .filter((product) => {
+        const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
+        const matchesPrice = getSalePrice(product) <= Number(maxPrice)
+        const matchesSearch = !normalizedSearch || [product.name, product.category, product.color]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedSearch)
+
+        return matchesCategory && matchesPrice && matchesSearch
+      })
+      .sort((firstProduct, secondProduct) => {
+        if (sortBy === 'price-low-high') return getSalePrice(firstProduct) - getSalePrice(secondProduct)
+        if (sortBy === 'rating') return secondProduct.rating - firstProduct.rating
+        return new Date(secondProduct.createdAt) - new Date(firstProduct.createdAt)
+      })
+  }, [debouncedSearchTerm, maxPrice, selectedCategory, sortBy])
 
   const handleIncrement = (id) => {
     setItems((prevItems) =>
@@ -119,6 +249,25 @@ const MainContent = () => {
 
   const handleRemove = (id) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== id))
+  }
+
+  const handleAddProductToCart = (product) => {
+    setItems((prevItems) => {
+      const itemExists = prevItems.some((item) => item.id === product.id)
+
+      if (itemExists) {
+        return prevItems.map((item) =>
+          item.id === product.id
+            ? {
+                ...item,
+                quantity: item.quantity + 1
+              }
+            : item
+        )
+      }
+
+      return [...prevItems, { ...product, quantity: 1 }]
+    })
   }
 
   const subtotal = useMemo(() => calculateSubtotal(items), [items])
@@ -161,7 +310,7 @@ const MainContent = () => {
       setAppliedCoupons(result.appliedCoupons)
       setCouponStatus({
         type: 'success',
-        message: `${trimmedCode} applied. You saved $${result.discount.toFixed(2)}.`
+        message: `${trimmedCode} applied. You saved ${formatRupees(result.discount)}.`
       })
       setCouponCode('')
       return
@@ -240,10 +389,10 @@ const MainContent = () => {
   }
 
   const discountedSubtotal = couponSummary.discountedSubtotal
-  const deliveryFee = deliveryMethod === 'delivery' ? 7.99 : 0
+  const deliveryFee = deliveryMethod === 'delivery' ? 79 : 0
   const serviceFee = discountedSubtotal * 0.03
   const tax = discountedSubtotal * 0.12
-  const credits = useCredit ? 8 : 0
+  const credits = useCredit ? 80 : 0
   const total = discountedSubtotal + deliveryFee + serviceFee + tax + tip - credits
 
   const renderLeftContent = () => {
@@ -416,7 +565,7 @@ const MainContent = () => {
           {appliedCoupons.length ? (
             <span className="rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-700">Coupons: {appliedCoupons.join(', ')}</span>
           ) : null}
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Total: ${total.toFixed(2)}</span>
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Total: {formatRupees(total)}</span>
         </div>
       </div>
     )
@@ -445,6 +594,119 @@ const MainContent = () => {
           )
         })}
       </div>
+
+      <div className="mt-8 px-7.5 text-2xl font-semibold text-gray-800">
+        Products
+      </div>
+
+      <section className="mx-7 mt-6 bg-white px-5 py-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">Shop shoes</h2>
+            <p className="text-sm text-gray-500">Search, filter, and sort the latest picks before checkout.</p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <label className="text-sm text-gray-600">
+              <span className="mb-1 flex items-center gap-1 font-medium text-gray-700">
+                <Search size={14} />
+                Search
+              </span>
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Name, brand, color"
+                className="h-10 w-full border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
+              />
+            </label>
+
+            <label className="text-sm text-gray-600">
+              <span className="mb-1 flex items-center gap-1 font-medium text-gray-700">
+                <SlidersHorizontal size={14} />
+                Category
+              </span>
+              <select
+                value={selectedCategory}
+                onChange={(event) => setSelectedCategory(event.target.value)}
+                className="h-10 w-full border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
+              >
+                {categories.map((category) => (
+                  <option key={category}>{category}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm text-gray-600">
+              <span className="mb-1 block font-medium text-gray-700">Max price: {formatRupees(maxPrice)}</span>
+              <input
+                type="range"
+                min="4000"
+                max="16000"
+                step="500"
+                value={maxPrice}
+                onChange={(event) => setMaxPrice(event.target.value)}
+                className="h-10 w-full accent-orange-500"
+              />
+            </label>
+
+            <label className="text-sm text-gray-600">
+              <span className="mb-1 block font-medium text-gray-700">Sort by</span>
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+                className="h-10 w-full border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
+              >
+                <option value="price-low-high">Price low-high</option>
+                <option value="rating">Rating</option>
+                <option value="newest">Newest</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {visibleProducts.map((product) => (
+            <article key={product.id} className="border border-gray-200 bg-white">
+              <div className="aspect-square overflow-hidden bg-gray-50">
+                <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
+              </div>
+
+              <div className="space-y-3 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">{product.name}</h3>
+                    <p className="text-sm text-gray-500">{product.category}</p>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-1 bg-orange-50 px-2 py-1 text-sm font-semibold text-orange-700">
+                    <Star size={14} fill="currentColor" />
+                    {product.rating}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <p>
+                    <span className="font-semibold text-gray-900">{formatRupees(getSalePrice(product))}</span>
+                    <span className="ml-2 text-sm text-gray-400 line-through">{formatRupees(product.originalPrice)}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleAddProductToCart(product)}
+                    className="bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800"
+                  >
+                    ADD
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {!visibleProducts.length ? (
+          <div className="mt-5 border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
+            No products match your filters.
+          </div>
+        ) : null}
+      </section>
 
       <div className="mt-8 px-7.5 text-2xl font-semibold text-gray-800">
         Checkout

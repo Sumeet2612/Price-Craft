@@ -8,12 +8,34 @@ import One8 from '../../assets/one8shoes.jpeg'
 import One82 from '../../assets/oneshoes2.jpeg'
 import Nike1 from '../../assets/nikealphashoes.jpeg'
 import Nike2 from '../../assets/nikejordan.jpeg'
+import Puma1 from '../../assets/Puma.jpeg'
+import Puma2 from '../../assets/image.png'
 
 const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`
+
+const genericSearchTerms = new Set(['shoe', 'shoes', 'sneaker', 'sneakers', 'show', 'shows'])
 
 const getSalePrice = (product) => Math.round(
   product.originalPrice * (1 - product.discountPercent / 100)
 )
+
+const normalizeSearchValue = (value) => String(value)
+  .toLowerCase()
+  .replace(/one\s*8/g, 'one8')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim()
+
+const getSearchTokens = (value) => normalizeSearchValue(value)
+  .split(' ')
+  .filter((token) => token && !genericSearchTerms.has(token))
+
+const getProductSearchText = (product) => normalizeSearchValue([
+  product.name,
+  product.category,
+  `${product.category} shoes`,
+  product.color,
+  product.size
+].join(' '))
 
 const products = [
   {
@@ -109,7 +131,7 @@ const products = [
   },
   {
     id: 8,
-    img: Nike2,
+    img: Puma1,
     name: 'Puma Street Rider',
     category: 'Puma',
     color: 'Black',
@@ -135,7 +157,7 @@ const products = [
   },
   {
     id: 10,
-    img: One8,
+    img: Puma2,
     name: 'Puma Flex Runner',
     category: 'Puma',
     color: 'Orange',
@@ -175,7 +197,7 @@ const MainContent = () => {
   const [maxPrice, setMaxPrice] = useState(16000)
   const [sortBy, setSortBy] = useState('newest')
 
-  const [tip, setTip] = useState(40)
+  const [tip, setTip] = useState(0)
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
   const [useCredit, setUseCredit] = useState(true)
   const [couponCode, setCouponCode] = useState('')
@@ -198,17 +220,26 @@ const MainContent = () => {
 
   const categories = useMemo(() => ['All', ...new Set(products.map((product) => product.category))], [])
 
+  const cartQuantityById = useMemo(() => {
+    return items.reduce((cartMap, item) => {
+      cartMap[item.id] = item.quantity
+      return cartMap
+    }, {})
+  }, [items])
+
+  const cartItemCount = useMemo(() => {
+    return items.reduce((totalQuantity, item) => totalQuantity + item.quantity, 0)
+  }, [items])
+
   const visibleProducts = useMemo(() => {
-    const normalizedSearch = debouncedSearchTerm.trim().toLowerCase()
+    const searchTokens = getSearchTokens(debouncedSearchTerm)
 
     return products
       .filter((product) => {
         const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
         const matchesPrice = getSalePrice(product) <= Number(maxPrice)
-        const matchesSearch = !normalizedSearch || [product.name, product.category, product.color]
-          .join(' ')
-          .toLowerCase()
-          .includes(normalizedSearch)
+        const productSearchText = getProductSearchText(product)
+        const matchesSearch = !searchTokens.length || searchTokens.every((token) => productSearchText.includes(token))
 
         return matchesCategory && matchesPrice && matchesSearch
       })
@@ -268,6 +299,13 @@ const MainContent = () => {
 
       return [...prevItems, { ...product, quantity: 1 }]
     })
+  }
+
+  const handleProductKeyDown = (event, product) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleAddProductToCart(product)
+    }
   }
 
   const subtotal = useMemo(() => calculateSubtotal(items), [items])
@@ -405,7 +443,7 @@ const MainContent = () => {
               <p className="text-sm text-gray-500">Confirm your items before you continue.</p>
             </div>
             <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-orange-700">
-              {items.length} item{items.length === 1 ? '' : 's'}
+              {cartItemCount} item{cartItemCount === 1 ? '' : 's'}
             </span>
           </div>
           <hr className="mb-6" />
@@ -599,7 +637,7 @@ const MainContent = () => {
         Products
       </div>
 
-      <section className="mx-7 mt-6 bg-white px-5 py-5">
+      <section className="catalog-panel">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">Shop shoes</h2>
@@ -607,7 +645,7 @@ const MainContent = () => {
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            <label className="text-sm text-gray-600">
+            <label className="catalog-control">
               <span className="mb-1 flex items-center gap-1 font-medium text-gray-700">
                 <Search size={14} />
                 Search
@@ -615,12 +653,12 @@ const MainContent = () => {
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Name, brand, color"
-                className="h-10 w-full border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
+                placeholder="Try Puma shoes or one 8 shoes"
+                className="catalog-field"
               />
             </label>
 
-            <label className="text-sm text-gray-600">
+            <label className="catalog-control">
               <span className="mb-1 flex items-center gap-1 font-medium text-gray-700">
                 <SlidersHorizontal size={14} />
                 Category
@@ -628,7 +666,7 @@ const MainContent = () => {
               <select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
-                className="h-10 w-full border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
+                className="catalog-field"
               >
                 {categories.map((category) => (
                   <option key={category}>{category}</option>
@@ -636,7 +674,7 @@ const MainContent = () => {
               </select>
             </label>
 
-            <label className="text-sm text-gray-600">
+            <label className="catalog-control">
               <span className="mb-1 block font-medium text-gray-700">Max price: {formatRupees(maxPrice)}</span>
               <input
                 type="range"
@@ -649,12 +687,12 @@ const MainContent = () => {
               />
             </label>
 
-            <label className="text-sm text-gray-600">
+            <label className="catalog-control">
               <span className="mb-1 block font-medium text-gray-700">Sort by</span>
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value)}
-                className="h-10 w-full border border-gray-300 px-3 text-sm outline-none focus:border-orange-500"
+                className="catalog-field"
               >
                 <option value="price-low-high">Price low-high</option>
                 <option value="rating">Rating</option>
@@ -666,7 +704,14 @@ const MainContent = () => {
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {visibleProducts.map((product) => (
-            <article key={product.id} className="border border-gray-200 bg-white">
+            <article
+              key={product.id}
+              className="product-card"
+              role="button"
+              tabIndex={0}
+              onClick={() => handleAddProductToCart(product)}
+              onKeyDown={(event) => handleProductKeyDown(event, product)}
+            >
               <div className="aspect-square overflow-hidden bg-gray-50">
                 <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
               </div>
@@ -690,12 +735,21 @@ const MainContent = () => {
                   </p>
                   <button
                     type="button"
-                    onClick={() => handleAddProductToCart(product)}
-                    className="bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleAddProductToCart(product)
+                    }}
+                    className="cart-action-button"
                   >
-                    ADD
+                    ADD CART
                   </button>
                 </div>
+
+                {cartQuantityById[product.id] ? (
+                  <p className="text-xs font-medium text-green-700">
+                    {cartQuantityById[product.id]} in cart
+                  </p>
+                ) : null}
               </div>
             </article>
           ))}
@@ -708,7 +762,7 @@ const MainContent = () => {
         ) : null}
       </section>
 
-      <div className="mt-8 px-7.5 text-2xl font-semibold text-gray-800">
+      <div id="cart-section" className="mt-8 scroll-mt-28 px-7.5 text-2xl font-semibold text-gray-800">
         Checkout
       </div>
 
@@ -741,7 +795,7 @@ const MainContent = () => {
           <Ordersummary
             subtotal={subtotal}
             discountedSubtotal={discountedSubtotal}
-            itemCount={items.length}
+            itemCount={cartItemCount}
             deliveryFee={deliveryFee}
             serviceFee={serviceFee}
             tax={tax}

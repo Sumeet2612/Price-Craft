@@ -149,11 +149,25 @@ const Ordersummary = ({
         <hr className="my-5" />
 
         <div>
-          <p className="font-semibold text-gray-700 mb-3">Tip</p>
+          <p className="font-semibold text-gray-700 mb-3">Tip <span className="text-xs font-normal text-gray-400">(optional)</span></p>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <label
-              className={`border p-2 flex items-center gap-2 cursor-pointer ${
+              className={`tip-option ${
+                tip === 0 ? "border-orange-500 bg-orange-50" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="tip"
+                checked={tip === 0}
+                onChange={() => setTip(0)}
+              />
+              No tip
+            </label>
+
+            <label
+              className={`tip-option ${
                 tip === 20 ? "border-orange-500" : ""
               }`}
             >
@@ -167,7 +181,7 @@ const Ordersummary = ({
             </label>
 
             <label
-              className={`border p-2 flex items-center gap-2 cursor-pointer ${
+              className={`tip-option ${
                 tip === 40 ? "border-orange-500" : ""
               }`}
             >
@@ -181,7 +195,7 @@ const Ordersummary = ({
             </label>
 
             <label
-              className={`border p-2 flex items-center gap-2 cursor-pointer ${
+              className={`tip-option ${
                 tip === 70 ? "border-orange-500" : ""
               }`}
             >

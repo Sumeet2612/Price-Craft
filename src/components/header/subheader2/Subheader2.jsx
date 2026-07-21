@@ -1,4 +1,3 @@
-import React from 'react'
 import { Menu, Search, ShoppingBag, MapPin } from 'lucide-react'
 import logo from '../../../assets/image1.png'
 
@@ -36,7 +35,13 @@ const Subheader2 = () => {
         <span className='cursor-pointer'>Marketplace</span>
         <span className='cursor-pointer'>Login / Register</span>
 
-        <ShoppingBag className='w-6 h-6 text-orange-500 cursor-pointer' />
+        <a
+          href="#cart-section"
+          aria-label="Go to cart"
+          className="text-orange-500 transition hover:text-orange-600"
+        >
+          <ShoppingBag className='w-6 h-6 cursor-pointer' />
+        </a>
 
         <button className='flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-md text-xs font-semibold'>
           <MapPin className='w-4 h-4' />

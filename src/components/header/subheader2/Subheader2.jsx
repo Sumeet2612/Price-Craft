@@ -1,50 +1,56 @@
 import { Menu, Search, ShoppingBag, MapPin } from 'lucide-react'
 import logo from '../../../assets/image1.png'
+import '../Header.css'
 
 const Subheader2 = () => {
   return (
-    <div className='flex items-center justify-between px-6 py-4 bg-white'>
+    <div className='primary-navbar'>
 
       {/* Left: menu + logo */}
-      <div className='flex items-center space-x-4'>
-        <Menu className='w-6 h-6 cursor-pointer' />
-        <div className='flex items-center space-x-2'>
-          <img src={logo} alt="logo" className='w h-20' />
-          <span className='text-xl font-semibold'>
-            <span className='text-orange-500'></span>
+      <div className='nav-logo-wrapper'>
+        <button className='menu-toggle-btn' aria-label="Toggle Navigation Menu">
+          <Menu className='w-6 h-6' />
+        </button>
+        <a href="#" className='flex items-center space-x-2 text-decoration-none'>
+          <img src={logo} alt="IndianMarket Logo" className='nav-logo-img' />
+          <span className='brand-text'>
+            Indian<span className='brand-highlight'>Market</span>
           </span>
-        </div>
+        </a>
       </div>
 
       {/* Center: search bar */}
-      <div className='flex items-center border rounded-md overflow-hidden w-150'>
+      <div className='nav-search-container'>
         <input
           type="text"
-          placeholder="Restaurants, grocery, fashion"
-          className='px-4 py-2 w-full outline-none text-sm'
+          placeholder="Search restaurants, grocery, fashion..."
+          className='nav-search-input'
         />
-        <button className='px-4 py-2 border-l'>
-          <Search className='w-5 h-5' />
+        <button className='nav-search-btn' aria-label="Search">
+          <Search className='w-4 h-4' />
         </button>
       </div>
 
       {/* Right: nav links + cart + location */}
-      <div className='flex items-center space-x-6 text-sm font-medium'>
-        <span className='cursor-pointer'>Stores</span>
-        <span className='cursor-pointer'>Restaurants</span>
-        <span className='cursor-pointer'>Marketplace</span>
-        <span className='cursor-pointer'>Login / Register</span>
+      <div className='nav-actions-group'>
+        <nav className='nav-links'>
+          <a href="#stores" className='nav-link'>Stores</a>
+          <a href="#restaurants" className='nav-link'>Restaurants</a>
+          <a href="#marketplace" className='nav-link'>Marketplace</a>
+          <a href="#login" className='nav-link'>Login / Register</a>
+        </nav>
 
         <a
           href="#cart-section"
           aria-label="Go to cart"
-          className="text-orange-500 transition hover:text-orange-600"
+          className="cart-icon-wrapper"
         >
-          <ShoppingBag className='w-6 h-6 cursor-pointer' />
+          <ShoppingBag className='w-5 h-5' />
+          <span className='cart-badge-dot'>3</span>
         </a>
 
-        <button className='flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-md text-xs font-semibold'>
-          <MapPin className='w-4 h-4' />
+        <button className='detect-location-btn'>
+          <MapPin className='w-4 h-4 pin-icon' />
           <span>DETECT LOCATION</span>
         </button>
       </div>

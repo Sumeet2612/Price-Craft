@@ -1,13 +1,14 @@
 import Subheader1 from './subheader1/Subheader1'
 import Subheader2 from './subheader2/Subheader2'
+import './Header.css'
 
 const Header = () => {
   return (
-    <div>
+    <header className='header-container'>
       <Subheader1 />
       <Subheader2 />
-    </div>
+    </header>
   )
 }
 
-export default Header
+export default Header

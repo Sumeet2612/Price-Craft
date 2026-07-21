@@ -1,41 +1,39 @@
 import React from 'react'
+import '../Header.css'
 
 const Subheader1 = () => {
   return (
-    <div className='bg-black text-white text-sm rounded-l flex justify-between items-center px-6 py-2'>
-      
-     
-      <div>
-        Welcome to Indianmarket.co
+    <div className='top-utility-bar'>
+      <div className='announcement-badge'>
+        <span className='promo-tag'>OFFER</span>
+        <span>Welcome to Indianmarket.co — 🔥 Express delivery on all orders!</span>
       </div>
 
-      
-      <div className='flex items-center space-x-6'>
-        <div className='flex items-center space-x-1 cursor-pointer'>
+      <div className='utility-nav-group'>
+        <div className='utility-item'>
           <span>💬</span>
           <span>Support</span>
         </div>
 
-        <div className='flex items-center space-x-1 cursor-pointer'>
+        <div className='utility-item'>
           <span>🇮🇳</span>
           <span>India</span>
-          <span>▾</span>
+          <span className='utility-chevron'>▾</span>
         </div>
 
-        <div className='flex items-center space-x-1 cursor-pointer'>
+        <div className='utility-item'>
           <span>Mumbai</span>
-          <span>▾</span>
+          <span className='utility-chevron'>▾</span>
         </div>
 
-        <div className='flex items-center space-x-1 cursor-pointer'>
+        <div className='utility-item'>
           <span>🌐</span>
           <span>EN</span>
-          <span>▾</span>
+          <span className='utility-chevron'>▾</span>
         </div>
       </div>
-
     </div>
   )
 }
 
-export default Subheader1
+export default Subheader1

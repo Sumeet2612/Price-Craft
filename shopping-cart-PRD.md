@@ -5,7 +5,7 @@
 
 ## 1. Overview
 
-**Project name:** ShopCart (working title — rename as you like)
+**Project name:** ShopCart 
 
 **Purpose:** A frontend e-commerce application demonstrating strong state management, algorithmic thinking (via a discount engine), and production-level UX polish. Built to be a standout portfolio piece for frontend developer interviews.
 
@@ -24,11 +24,11 @@
 
 ## 3. Tech Stack (suggested)
 
-- **Frontend:** React (or Next.js if you want SSR + API routes)
-- **State:** `useReducer` + Context API (Redux Toolkit/Zustand optional stretch goal)
+- **Frontend:** React 
+- **State:** `useReducer` + Context API (Redux Toolkit)
 - **Styling:** Tailwind CSS
-- **Data:** Static/mock product JSON, or a simple backend (Express + MongoDB) if you want full-stack scope
-- **Deployment:** Vercel/Netlify
+- **Data:** Static & mock product JSON,
+- **Deployment:** Vercel
 
 ---
 

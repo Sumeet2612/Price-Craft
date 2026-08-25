@@ -4,6 +4,14 @@ import { Minus, Plus, X } from 'lucide-react'
 const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`
 
 const Cartitem = ({ items, onIncrement, onDecrement, onRemove }) => {
+  if (!items.length) {
+    return (
+      <div className="border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
+        Your cart is empty. Add a product from the catalog to continue.
+      </div>
+    )
+  }
+
   return (
     <div className='mx-10 my-10 bg-white'>
       {items.map(function (elem, index) {

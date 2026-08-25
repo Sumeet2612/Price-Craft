@@ -1,23 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ChevronRight, Search, SlidersHorizontal, Star } from 'lucide-react'
 import Cartitem from './Cartitem'
 import Ordersummary from './Ordersummary'
-import { applyCoupon, calculateSubtotal } from '../../utils/discountEngine'
-
-import One8 from '../../assets/one8shoes.jpeg'
-import One82 from '../../assets/oneshoes2.jpeg'
-import Nike1 from '../../assets/nikealphashoes.jpeg'
-import Nike2 from '../../assets/nikejordan.jpeg'
-import Puma1 from '../../assets/Puma.jpeg'
-import Puma2 from '../../assets/image.png'
+import { products, getSalePrice } from '../../data/products'
+import { useCart } from '../../context/CartContext'
 
 const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`
 
 const genericSearchTerms = new Set(['shoe', 'shoes', 'sneaker', 'sneakers', 'show', 'shows'])
-
-const getSalePrice = (product) => Math.round(
-  product.originalPrice * (1 - product.discountPercent / 100)
-)
 
 const normalizeSearchValue = (value) => String(value)
   .toLowerCase()
@@ -37,139 +28,6 @@ const getProductSearchText = (product) => normalizeSearchValue([
   product.size
 ].join(' '))
 
-const products = [
-  {
-    id: 1,
-    img: One8,
-    name: 'One8 Drift Runner',
-    category: 'One8',
-    color: 'Black',
-    size: 'UK 7',
-    price: 6999,
-    originalPrice: 7799,
-    discountPercent: 10,
-    rating: 4.7,
-    createdAt: '2026-07-08'
-  },
-  {
-    id: 2,
-    img: One82,
-    name: 'One8 Court Sprint',
-    category: 'One8',
-    color: 'White',
-    size: 'UK 7',
-    price: 6299,
-    originalPrice: 6999,
-    discountPercent: 10,
-    rating: 4.4,
-    createdAt: '2026-06-26'
-  },
-  {
-    id: 3,
-    img: Nike1,
-    name: 'Nike Alpha Fly',
-    category: 'Nike',
-    color: 'Blue',
-    size: 'UK 8',
-    price: 11899,
-    originalPrice: 13999,
-    discountPercent: 15,
-    rating: 4.8,
-    createdAt: '2026-07-15'
-  },
-  {
-    id: 4,
-    img: Nike2,
-    name: 'Nike Air Jordan',
-    category: 'Nike',
-    color: 'Red',
-    size: 'UK 9',
-    price: 12799,
-    originalPrice: 15999,
-    discountPercent: 20,
-    rating: 4.9,
-    createdAt: '2026-07-19'
-  },
-  {
-    id: 5,
-    img: Nike1,
-    name: 'Nike Tempo Glide',
-    category: 'Nike',
-    color: 'Silver',
-    size: 'UK 8',
-    price: 8999,
-    originalPrice: 9999,
-    discountPercent: 10,
-    rating: 4.6,
-    createdAt: '2026-07-13'
-  },
-  {
-    id: 6,
-    img: One8,
-    name: 'One8 Urban Walk',
-    category: 'One8',
-    color: 'Grey',
-    size: 'UK 6',
-    price: 5599,
-    originalPrice: 6999,
-    discountPercent: 20,
-    rating: 4.3,
-    createdAt: '2026-07-01'
-  },
-  {
-    id: 7,
-    img: One82,
-    name: 'Adidas Swift Court',
-    category: 'Adidas',
-    color: 'White',
-    size: 'UK 9',
-    price: 7499,
-    originalPrice: 9999,
-    discountPercent: 25,
-    rating: 4.5,
-    createdAt: '2026-07-17'
-  },
-  {
-    id: 8,
-    img: Puma1,
-    name: 'Puma Street Rider',
-    category: 'Puma',
-    color: 'Black',
-    size: 'UK 10',
-    price: 6399,
-    originalPrice: 7999,
-    discountPercent: 20,
-    rating: 4.2,
-    createdAt: '2026-06-20'
-  },
-  {
-    id: 9,
-    img: Nike1,
-    name: 'Adidas Aero Boost',
-    category: 'Adidas',
-    color: 'Blue',
-    size: 'UK 8',
-    price: 10499,
-    originalPrice: 13999,
-    discountPercent: 25,
-    rating: 4.8,
-    createdAt: '2026-07-20'
-  },
-  {
-    id: 10,
-    img: Puma2,
-    name: 'Puma Flex Runner',
-    category: 'Puma',
-    color: 'Orange',
-    size: 'UK 7',
-    price: 4799,
-    originalPrice: 5999,
-    discountPercent: 20,
-    rating: 4.1,
-    createdAt: '2026-06-12'
-  }
-]
-
 const createEmptyShippingForm = () => ({
   fullName: '',
   email: '',
@@ -188,23 +46,30 @@ const createEmptyPaymentForm = () => ({
 
 const MainContent = () => {
   const steps = ['Cart Review', 'Shipping Info', 'Payment', 'Order Confirmation']
+  const {
+    items,
+    filters,
+    addItem,
+    removeItem,
+    updateQuantity,
+    applyCartCoupon,
+    removeCoupon,
+    setFilters,
+    itemCount,
+    subtotal,
+    discountSummary,
+    rejectedDiscounts
+  } = useCart()
 
   const [currentStep, setCurrentStep] = useState(0)
-  const [items, setItems] = useState(products.slice(0, 4).map((product) => ({ ...product, quantity: product.id === 4 ? 2 : 1 })))
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
-  const [maxPrice, setMaxPrice] = useState(16000)
-  const [sortBy, setSortBy] = useState('newest')
-
+  const [searchTerm, setSearchTerm] = useState(filters.search)
   const [tip, setTip] = useState(0)
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
   const [useCredit, setUseCredit] = useState(true)
   const [couponCode, setCouponCode] = useState('')
-  const [appliedCoupons, setAppliedCoupons] = useState([])
   const [couponStatus, setCouponStatus] = useState({
     type: 'idle',
-    message: 'Apply a coupon to unlock extra savings.'
+    message: 'Try SAVE10, FLAT200, FASHION20, BOGOBOOKS, or BIG500.'
   })
   const [shippingForm, setShippingForm] = useState(createEmptyShippingForm())
   const [paymentForm, setPaymentForm] = useState(createEmptyPaymentForm())
@@ -212,143 +77,55 @@ const MainContent = () => {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
+      setFilters({ search: searchTerm })
     }, 300)
 
     return () => window.clearTimeout(timeoutId)
-  }, [searchTerm])
+  }, [searchTerm, setFilters])
+
+  useEffect(() => {
+    if (!rejectedDiscounts.length) return
+    setCouponStatus({
+      type: 'error',
+      message: rejectedDiscounts.map((item) => `${item.code}: ${item.reason}`).join(' ')
+    })
+  }, [rejectedDiscounts])
 
   const categories = useMemo(() => ['All', ...new Set(products.map((product) => product.category))], [])
 
   const cartQuantityById = useMemo(() => {
     return items.reduce((cartMap, item) => {
-      cartMap[item.id] = item.quantity
+      cartMap[item.productId] = item.quantity
       return cartMap
     }, {})
   }, [items])
 
-  const cartItemCount = useMemo(() => {
-    return items.reduce((totalQuantity, item) => totalQuantity + item.quantity, 0)
-  }, [items])
-
   const visibleProducts = useMemo(() => {
-    const searchTokens = getSearchTokens(debouncedSearchTerm)
+    const searchTokens = getSearchTokens(filters.search)
 
     return products
       .filter((product) => {
-        const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
-        const matchesPrice = getSalePrice(product) <= Number(maxPrice)
+        const matchesCategory = filters.category === 'All' || product.category === filters.category
+        const matchesPrice = getSalePrice(product) <= Number(filters.maxPrice)
         const productSearchText = getProductSearchText(product)
         const matchesSearch = !searchTokens.length || searchTokens.every((token) => productSearchText.includes(token))
 
         return matchesCategory && matchesPrice && matchesSearch
       })
       .sort((firstProduct, secondProduct) => {
-        if (sortBy === 'price-low-high') return getSalePrice(firstProduct) - getSalePrice(secondProduct)
-        if (sortBy === 'rating') return secondProduct.rating - firstProduct.rating
+        if (filters.sortBy === 'price-low-high') return getSalePrice(firstProduct) - getSalePrice(secondProduct)
+        if (filters.sortBy === 'rating') return secondProduct.rating - firstProduct.rating
         return new Date(secondProduct.createdAt) - new Date(firstProduct.createdAt)
       })
-  }, [debouncedSearchTerm, maxPrice, selectedCategory, sortBy])
-
-  const handleIncrement = (id) => {
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: item.quantity + 1
-            }
-          : item
-      )
-    )
-  }
-
-  const handleDecrement = (id) => {
-    setItems((prevItems) =>
-      prevItems
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: item.quantity - 1
-              }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    )
-  }
-
-  const handleRemove = (id) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id))
-  }
-
-  const handleAddProductToCart = (product) => {
-    setItems((prevItems) => {
-      const itemExists = prevItems.some((item) => item.id === product.id)
-
-      if (itemExists) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1
-              }
-            : item
-        )
-      }
-
-      return [...prevItems, { ...product, quantity: 1 }]
-    })
-  }
-
-  const handleProductKeyDown = (event, product) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      handleAddProductToCart(product)
-    }
-  }
-
-  const subtotal = useMemo(() => calculateSubtotal(items), [items])
-
-  const couponSummary = useMemo(() => {
-    let remainingSubtotal = subtotal
-    let totalDiscount = 0
-    const validCoupons = []
-
-    for (const code of appliedCoupons) {
-      const result = applyCoupon(items, remainingSubtotal, code, validCoupons)
-
-      if (!result.success) {
-        break
-      }
-
-      remainingSubtotal = result.finalTotal
-      totalDiscount += result.discount
-      validCoupons.push(code)
-    }
-
-    return {
-      totalDiscount,
-      discountedSubtotal: Math.max(remainingSubtotal, 0),
-      validCoupons,
-    }
-  }, [appliedCoupons, items, subtotal])
+  }, [filters])
 
   const handleApplyCoupon = () => {
-    const trimmedCode = couponCode.trim().toUpperCase()
-
-    if (!trimmedCode) {
-      setCouponStatus({ type: 'error', message: 'Please enter a coupon code.' })
-      return
-    }
-
-    const result = applyCoupon(items, subtotal - couponSummary.totalDiscount, trimmedCode, couponSummary.validCoupons)
+    const result = applyCartCoupon(couponCode)
 
     if (result.success) {
-      setAppliedCoupons(result.appliedCoupons)
       setCouponStatus({
         type: 'success',
-        message: `${trimmedCode} applied. You saved ${formatRupees(result.discount)}.`
+        message: `${result.appliedCoupon} applied. You saved ${formatRupees(result.discount)}.`
       })
       setCouponCode('')
       return
@@ -358,8 +135,7 @@ const MainContent = () => {
   }
 
   const handleRemoveCoupon = (codeToRemove) => {
-    const updatedCoupons = appliedCoupons.filter((code) => code !== codeToRemove)
-    setAppliedCoupons(updatedCoupons)
+    removeCoupon(codeToRemove)
     setCouponStatus({ type: 'success', message: `${codeToRemove} removed.` })
   }
 
@@ -392,6 +168,10 @@ const MainContent = () => {
 
   const handleNextStep = () => {
     if (currentStep === 0) {
+      if (!items.length) {
+        setErrors({ cart: 'Add at least one item before continuing.' })
+        return
+      }
       setCurrentStep(1)
       setErrors({})
       return
@@ -408,7 +188,6 @@ const MainContent = () => {
       if (!validatePayment()) return
       setCurrentStep(3)
       setErrors({})
-      return
     }
   }
 
@@ -426,12 +205,12 @@ const MainContent = () => {
     setErrors({})
   }
 
-  const discountedSubtotal = couponSummary.discountedSubtotal
+  const discountedSubtotal = discountSummary.finalTotal
   const deliveryFee = deliveryMethod === 'delivery' ? 79 : 0
   const serviceFee = discountedSubtotal * 0.03
   const tax = discountedSubtotal * 0.12
   const credits = useCredit ? 80 : 0
-  const total = discountedSubtotal + deliveryFee + serviceFee + tax + tip - credits
+  const total = Math.max(discountedSubtotal + deliveryFee + serviceFee + tax + tip - credits, 0)
 
   const renderLeftContent = () => {
     if (currentStep === 0) {
@@ -443,15 +222,22 @@ const MainContent = () => {
               <p className="text-sm text-gray-500">Confirm your items before you continue.</p>
             </div>
             <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-orange-700">
-              {cartItemCount} item{cartItemCount === 1 ? '' : 's'}
+              {itemCount} item{itemCount === 1 ? '' : 's'}
             </span>
           </div>
           <hr className="mb-6" />
+          {errors.cart ? <p className="mb-4 text-sm text-red-500">{errors.cart}</p> : null}
           <Cartitem
             items={items}
-            onIncrement={handleIncrement}
-            onDecrement={handleDecrement}
-            onRemove={handleRemove}
+            onIncrement={(id) => {
+              const item = items.find((entry) => entry.productId === id)
+              updateQuantity(id, (item?.quantity || 0) + 1)
+            }}
+            onDecrement={(id) => {
+              const item = items.find((entry) => entry.productId === id)
+              updateQuantity(id, (item?.quantity || 0) - 1)
+            }}
+            onRemove={removeItem}
           />
         </div>
       )
@@ -600,8 +386,10 @@ const MainContent = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {appliedCoupons.length ? (
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-700">Coupons: {appliedCoupons.join(', ')}</span>
+          {discountSummary.appliedCoupons.length ? (
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-700">
+              Coupons: {discountSummary.appliedCoupons.join(', ')}
+            </span>
           ) : null}
           <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">Total: {formatRupees(total)}</span>
         </div>
@@ -611,8 +399,8 @@ const MainContent = () => {
 
   return (
     <div className="pb-10">
-      <div className="flex items-center gap-1 pt-5 px-7.5 text-sm text-gray-400 cursor-pointer">
-        <span className="hover:text-gray-600">Home</span>
+      <div className="flex items-center gap-1 pt-5 px-7.5 text-sm text-gray-400">
+        <Link to="/" className="hover:text-gray-600">Home</Link>
         <ChevronRight size={14} />
         <span className="hover:text-gray-600">Stores</span>
       </div>
@@ -640,8 +428,8 @@ const MainContent = () => {
       <section className="catalog-panel">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">Shop shoes</h2>
-            <p className="text-sm text-gray-500">Search, filter, and sort the latest picks before checkout.</p>
+            <h2 className="text-xl font-semibold text-gray-800">Shop Cart catalog</h2>
+            <p className="text-sm text-gray-500">Search, filter, and sort. Fashion and Books unlock FASHION20 and BOGOBOOKS.</p>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -653,7 +441,7 @@ const MainContent = () => {
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Try Puma shoes or one 8 shoes"
+                placeholder="Try Puma, fashion, or books"
                 className="catalog-field"
               />
             </label>
@@ -664,8 +452,8 @@ const MainContent = () => {
                 Category
               </span>
               <select
-                value={selectedCategory}
-                onChange={(event) => setSelectedCategory(event.target.value)}
+                value={filters.category}
+                onChange={(event) => setFilters({ category: event.target.value })}
                 className="catalog-field"
               >
                 {categories.map((category) => (
@@ -675,14 +463,14 @@ const MainContent = () => {
             </label>
 
             <label className="catalog-control">
-              <span className="mb-1 block font-medium text-gray-700">Max price: {formatRupees(maxPrice)}</span>
+              <span className="mb-1 block font-medium text-gray-700">Max price: {formatRupees(filters.maxPrice)}</span>
               <input
                 type="range"
-                min="4000"
+                min="400"
                 max="16000"
-                step="500"
-                value={maxPrice}
-                onChange={(event) => setMaxPrice(event.target.value)}
+                step="100"
+                value={filters.maxPrice}
+                onChange={(event) => setFilters({ maxPrice: Number(event.target.value) })}
                 className="h-10 w-full accent-orange-500"
               />
             </label>
@@ -690,8 +478,8 @@ const MainContent = () => {
             <label className="catalog-control">
               <span className="mb-1 block font-medium text-gray-700">Sort by</span>
               <select
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value)}
+                value={filters.sortBy}
+                onChange={(event) => setFilters({ sortBy: event.target.value })}
                 className="catalog-field"
               >
                 <option value="price-low-high">Price low-high</option>
@@ -704,22 +492,19 @@ const MainContent = () => {
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {visibleProducts.map((product) => (
-            <article
-              key={product.id}
-              className="product-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => handleAddProductToCart(product)}
-              onKeyDown={(event) => handleProductKeyDown(event, product)}
-            >
-              <div className="aspect-square overflow-hidden bg-gray-50">
-                <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
-              </div>
+            <article key={product.id} className="product-card">
+              <Link to={`/product/${product.id}`} className="block">
+                <div className="aspect-square overflow-hidden bg-gray-50">
+                  <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
+                </div>
+              </Link>
 
               <div className="space-y-3 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="font-semibold text-gray-800">{product.name}</h3>
+                    <Link to={`/product/${product.id}`} className="font-semibold text-gray-800 hover:text-orange-600">
+                      {product.name}
+                    </Link>
                     <p className="text-sm text-gray-500">{product.category}</p>
                   </div>
                   <span className="inline-flex shrink-0 items-center gap-1 bg-orange-50 px-2 py-1 text-sm font-semibold text-orange-700">
@@ -735,10 +520,7 @@ const MainContent = () => {
                   </p>
                   <button
                     type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleAddProductToCart(product)
-                    }}
+                    onClick={() => addItem(product)}
                     className="cart-action-button"
                   >
                     ADD CART
@@ -766,7 +548,7 @@ const MainContent = () => {
         Checkout
       </div>
 
-      <div className="flex gap-8 mx-7 mt-6 items-start">
+      <div className="flex gap-8 mx-7 mt-6 items-start max-lg:flex-col">
         <div className="flex-1 bg-white px-6 py-6">
           {renderLeftContent()}
 
@@ -795,7 +577,7 @@ const MainContent = () => {
           <Ordersummary
             subtotal={subtotal}
             discountedSubtotal={discountedSubtotal}
-            itemCount={cartItemCount}
+            itemCount={itemCount}
             deliveryFee={deliveryFee}
             serviceFee={serviceFee}
             tax={tax}
@@ -805,8 +587,8 @@ const MainContent = () => {
             deliveryMethod={deliveryMethod}
             couponCode={couponCode}
             couponStatus={couponStatus}
-            discountAmount={couponSummary.totalDiscount}
-            appliedCoupons={appliedCoupons}
+            discountAmount={discountSummary.discount}
+            appliedCoupons={discountSummary.appliedCoupons}
             setCouponCode={setCouponCode}
             setTip={setTip}
             setUseCredit={setUseCredit}

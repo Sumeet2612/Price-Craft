@@ -1,8 +1,12 @@
+import { Link } from 'react-router-dom'
 import { Menu, Search, ShoppingBag, MapPin } from 'lucide-react'
 import logo from '../../../assets/image1.png'
+import { useCart } from '../../../context/CartContext'
 import '../Header.css'
 
 const Subheader2 = () => {
+  const { itemCount } = useCart()
+
   return (
     <div className='primary-navbar'>
 
@@ -11,12 +15,12 @@ const Subheader2 = () => {
         <button className='menu-toggle-btn' aria-label="Toggle Navigation Menu">
           <Menu className='w-6 h-6' />
         </button>
-        <a href="#" className='flex items-center space-x-2 text-decoration-none'>
+        <Link to="/" className='flex items-center space-x-2 text-decoration-none'>
           <img src={logo} alt="IndianMarket Logo" className='nav-logo-img' />
           <span className='brand-text'>
             Indian<span className='brand-highlight'>Market</span>
           </span>
-        </a>
+        </Link>
       </div>
 
       {/* Center: search bar */}
@@ -40,14 +44,14 @@ const Subheader2 = () => {
           <a href="#login" className='nav-link'>Login / Register</a>
         </nav>
 
-        <a
-          href="#cart-section"
+        <Link
+          to="/#cart-section"
           aria-label="Go to cart"
           className="cart-icon-wrapper"
         >
           <ShoppingBag className='w-5 h-5' />
-          <span className='cart-badge-dot'>3</span>
-        </a>
+          {itemCount > 0 ? <span className='cart-badge-dot'>{itemCount}</span> : null}
+        </Link>
 
         <button className='detect-location-btn'>
           <MapPin className='w-4 h-4 pin-icon' />

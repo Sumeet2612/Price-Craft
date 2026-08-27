@@ -4,6 +4,7 @@ import Nike1 from '../assets/nikealphashoes.jpeg'
 import Nike2 from '../assets/nikejordan.jpeg'
 import Puma1 from '../assets/Puma.jpeg'
 import Puma2 from '../assets/image.png'
+import linenshirt from '../assets/Linenshirt.webp'
 
 export const products = [
   {
@@ -104,7 +105,7 @@ export const products = [
   },
   {
     id: 7,
-    img: Nike1,
+    img:  linenshirt,
     images: [Nike1, One8],
     name: 'Linen Resort Shirt',
     category: 'Fashion',
@@ -117,55 +118,8 @@ export const products = [
     createdAt: '2026-07-11',
     stock: 22,
     description: 'Breathable linen shirt with a relaxed collar. Eligible for FASHION20.'
-  },
-  {
-    id: 8,
-    img: One82,
-    images: [One82, Puma1],
-    name: 'Tapered Chino Pants',
-    category: 'Fashion',
-    color: 'Khaki',
-    size: '32',
-    price: 2199,
-    originalPrice: 2999,
-    discountPercent: 27,
-    rating: 4.3,
-    createdAt: '2026-07-04',
-    stock: 14,
-    description: 'Stretch chinos with a clean taper. Pairs with the linen shirt for a full fashion cart.'
-  },
-  {
-    id: 9,
-    img: Nike2,
-    images: [Nike2, Puma2],
-    name: 'Systems Design Primer',
-    category: 'Books',
-    color: 'Hardcover',
-    size: 'Standard',
-    price: 899,
-    originalPrice: 999,
-    discountPercent: 10,
-    rating: 4.8,
-    createdAt: '2026-07-21',
-    stock: 30,
-    description: 'Interview-ready systems notes. Add two copies to see BOGOBOOKS discount the cheaper unit.'
-  },
-  {
-    id: 10,
-    img: One8,
-    images: [One8, Nike1],
-    name: 'Frontend Patterns Handbook',
-    category: 'Books',
-    color: 'Paperback',
-    size: 'Standard',
-    price: 599,
-    originalPrice: 799,
-    discountPercent: 25,
-    rating: 4.6,
-    createdAt: '2026-06-30',
-    stock: 26,
-    description: 'Reducer, context, and rules-engine patterns explained with diagrams. Qualifies for BOGOBOOKS.'
   }
+  
 ]
 
 export const getProductById = (id) =>

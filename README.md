@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # ShopCart
 
 Frontend shopping cart built as a portfolio piece. The standout feature is a **rules-based discount engine** (percentage, flat, BOGO, min-cart) with stacking, rejection, and auto-invalidation.

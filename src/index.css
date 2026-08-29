@@ -1,31 +1,78 @@
 @import "tailwindcss";
 
+:root {
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
+  --brand-500: #f97316;
+  --brand-600: #ea580c;
+  --brand-700: #c2410c;
+  --surface: #f5f2ee;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: rgba(15, 23, 42, 0.08);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: Inter, "Segoe UI", sans-serif;
+  background: var(--surface);
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer components {
   .catalog-panel {
-    @apply mx-7 mt-6 bg-white px-5 py-5;
+    @apply mx-4 mt-6 rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_14px_28px_-24px_rgba(15,23,42,0.3)] sm:mx-6 lg:mx-7 lg:p-6;
   }
 
   .catalog-control {
-    @apply text-sm text-gray-600;
+    @apply text-sm text-slate-600;
   }
 
   .catalog-field {
-    @apply h-10 w-full border border-gray-300 px-3 text-sm outline-none transition focus:border-orange-500;
+    @apply h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100;
   }
 
   .product-card {
-    @apply cursor-pointer border border-gray-200 bg-white transition duration-200 hover:-translate-y-1 hover:border-orange-300 hover:shadow-md;
+    @apply cursor-pointer overflow-hidden rounded-[22px] border border-slate-200 bg-white transition duration-200 hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_18px_32px_-24px_rgba(234,88,12,0.45)];
   }
 
   .cart-action-button {
-    @apply cursor-pointer bg-black px-3 py-2 text-xs font-semibold text-white transition hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2;
+    @apply cursor-pointer rounded-xl bg-slate-900 px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200;
   }
 
   .tip-option {
-    @apply flex cursor-pointer items-center gap-2 border border-gray-200 p-2 text-sm transition hover:border-orange-300 hover:bg-orange-50;
+    @apply flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-2 text-sm transition hover:border-orange-300 hover:bg-orange-50;
   }
 }

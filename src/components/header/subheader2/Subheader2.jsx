@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Menu, Search, ShoppingBag, MapPin } from 'lucide-react'
+import { ChevronDown, Menu, MapPin, ShoppingBag, UserRound } from 'lucide-react'
 import logo from '../../../assets/image1.png'
 import { useCart } from '../../../context/CartContext'
 import '../Header.css'
@@ -9,56 +9,46 @@ const Subheader2 = () => {
 
   return (
     <div className='primary-navbar'>
-
-      {/* Left: menu + logo */}
       <div className='nav-logo-wrapper'>
-        <button className='menu-toggle-btn' aria-label="Toggle Navigation Menu">
-          <Menu className='w-6 h-6' />
+        <button className='menu-toggle-btn' aria-label='Toggle navigation menu'>
+          <Menu className='h-5 w-5' />
         </button>
-        <Link to="/" className='flex items-center space-x-2 text-decoration-none'>
-          <img src={logo} alt="IndianMarket Logo" className='nav-logo-img' />
-          <span className='brand-text'>
-            Indian<span className='brand-highlight'>Market</span>
-          </span>
+
+        <Link to='/' className='brand-link'>
+          <div className='brand-mark'>
+            <img src={logo} alt='Price-Craft logo' className='nav-logo-img' />
+          </div>
+          <div className='brand-stack'>
+            <span className='brand-text'>Price</span>
+            <span className='brand-highlight'>Craft</span>
+          </div>
         </Link>
       </div>
 
-      {/* Center: search bar */}
-      <div className='nav-search-container'>
-        <input
-          type="text"
-          placeholder="Search restaurants, grocery, fashion..."
-          className='nav-search-input'
-        />
-        <button className='nav-search-btn' aria-label="Search">
-          <Search className='w-4 h-4' />
-        </button>
-      </div>
+      <nav className='nav-links' aria-label='Main navigation'>
+        <a href='#new-arrivals' className='nav-link'>New Arrivals</a>
+        <a href='#featured' className='nav-link'>Featured</a>
+        <a href='#essentials' className='nav-link'>Essentials</a>
+        <a href='#journal' className='nav-link'>Journal</a>
+      </nav>
 
-      {/* Right: nav links + cart + location */}
       <div className='nav-actions-group'>
-        <nav className='nav-links'>
-          <a href="#stores" className='nav-link'>Stores</a>
-          <a href="#restaurants" className='nav-link'>Restaurants</a>
-          <a href="#marketplace" className='nav-link'>Marketplace</a>
-          <a href="#login" className='nav-link'>Login / Register</a>
-        </nav>
+        <button className='location-button' type='button'>
+          <MapPin className='h-4 w-4' />
+          <span>Mumbai</span>
+          <ChevronDown className='h-3.5 w-3.5' />
+        </button>
 
-        <Link
-          to="/#cart-section"
-          aria-label="Go to cart"
-          className="cart-icon-wrapper"
-        >
-          <ShoppingBag className='w-5 h-5' />
+        <button className='account-button' type='button' aria-label='Account'>
+          <UserRound className='h-4 w-4' />
+          <span>Account</span>
+        </button>
+
+        <Link to='/#cart-section' className='cart-icon-wrapper' aria-label='View cart'>
+          <ShoppingBag className='h-5 w-5' />
           {itemCount > 0 ? <span className='cart-badge-dot'>{itemCount}</span> : null}
         </Link>
-
-        <button className='detect-location-btn'>
-          <MapPin className='w-4 h-4 pin-icon' />
-          <span>DETECT LOCATION</span>
-        </button>
       </div>
-
     </div>
   )
 }

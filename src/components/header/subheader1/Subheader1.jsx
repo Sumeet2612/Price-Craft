@@ -5,30 +5,20 @@ const Subheader1 = () => {
   return (
     <div className='top-utility-bar'>
       <div className='announcement-badge'>
-        <span className='promo-tag'>OFFER</span>
-        <span>Welcome to Indianmarket.co — 🔥 Express delivery on all orders!</span>
+        <span className='promo-tag'>Offer</span>
+        <span>Free express delivery across India on orders above Rs. 3,999.</span>
       </div>
 
       <div className='utility-nav-group'>
         <div className='utility-item'>
-          <span>💬</span>
           <span>Support</span>
         </div>
-
         <div className='utility-item'>
-          <span>🇮🇳</span>
           <span>India</span>
           <span className='utility-chevron'>▾</span>
         </div>
-
         <div className='utility-item'>
           <span>Mumbai</span>
-          <span className='utility-chevron'>▾</span>
-        </div>
-
-        <div className='utility-item'>
-          <span>🌐</span>
-          <span>EN</span>
           <span className='utility-chevron'>▾</span>
         </div>
       </div>
@@ -36,4 +26,4 @@ const Subheader1 = () => {
   )
 }
 
-export default Subheader1
+export default Subheader1

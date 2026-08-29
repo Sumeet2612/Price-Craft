@@ -4,6 +4,7 @@ import MainContent from './components/Main_content/MainContent'
 import ProductDetail from './pages/ProductDetail'
 import Toast from './components/Toast'
 import ErrorBoundary from './components/ErrorBoundary'
+import Footer from './components/footer/Footer'
 import { CartProvider } from './context/CartContext'
 
 const App = () => {
@@ -11,12 +12,15 @@ const App = () => {
     <BrowserRouter>
       <CartProvider>
         <ErrorBoundary>
-          <div className="bg-[#fff4ee] min-h-screen">
+          <div className="min-h-screen bg-[#f5f2ee] text-slate-900 antialiased">
             <Header />
-            <Routes>
-              <Route path="/" element={<MainContent />} />
-              <Route path="/product/:productId" element={<ProductDetail />} />
-            </Routes>
+            <main className="relative">
+              <Routes>
+                <Route path="/" element={<MainContent />} />
+                <Route path="/product/:productId" element={<ProductDetail />} />
+              </Routes>
+            </main>
+            <Footer />
             <Toast />
           </div>
         </ErrorBoundary>

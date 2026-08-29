@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, Search, SlidersHorizontal, Star } from 'lucide-react'
+import { ChevronRight, RefreshCw, Search, SlidersHorizontal, Star } from 'lucide-react'
 import Cartitem from './Cartitem'
 import Ordersummary from './Ordersummary'
-import { products, getSalePrice } from '../../data/products'
+import { fetchCategories, fetchProducts, products, getSalePrice } from '../../data/products'
 import { useCart } from '../../context/CartContext'
 
 const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`
@@ -62,6 +62,12 @@ const MainContent = () => {
   } = useCart()
 
   const [currentStep, setCurrentStep] = useState(0)
+  const [catalogProducts, setCatalogProducts] = useState(products)
+  const [availableCategories, setAvailableCategories] = useState(['All'])
+  const [totalProducts, setTotalProducts] = useState(products.length)
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [productError, setProductError] = useState('')
   const [searchTerm, setSearchTerm] = useState(filters.search)
   const [tip, setTip] = useState(0)
   const [deliveryMethod, setDeliveryMethod] = useState('delivery')
@@ -84,6 +90,65 @@ const MainContent = () => {
   }, [searchTerm, setFilters])
 
   useEffect(() => {
+    let isMounted = true
+
+    const loadCategories = async () => {
+      try {
+        const categories = await fetchCategories()
+        if (!isMounted) return
+        setAvailableCategories(['All', ...categories])
+      } catch {
+        if (!isMounted) return
+        setAvailableCategories(['All'])
+      }
+    }
+
+    loadCategories()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadProducts = async () => {
+      setIsLoadingProducts(true)
+      setProductError('')
+
+      try {
+        const response = await fetchProducts({
+          limit: 20,
+          skip: 0,
+          category: filters.category === 'All' ? '' : filters.category,
+          q: filters.search
+        })
+
+        if (!isMounted) return
+
+        setCatalogProducts(response.items)
+        setTotalProducts(response.total || response.items.length)
+      } catch (error) {
+        if (!isMounted) return
+        setCatalogProducts(products)
+        setTotalProducts(products.length)
+        setProductError('Unable to load the latest catalogue. Please try again.')
+      } finally {
+        if (isMounted) {
+          setIsLoadingProducts(false)
+        }
+      }
+    }
+
+    loadProducts()
+
+    return () => {
+      isMounted = false
+    }
+  }, [filters.category, filters.search])
+
+  useEffect(() => {
     if (!rejectedDiscounts.length) return
     setCouponStatus({
       type: 'error',
@@ -91,7 +156,11 @@ const MainContent = () => {
     })
   }, [rejectedDiscounts])
 
-  const categories = useMemo(() => ['All', ...new Set(products.map((product) => product.category))], [])
+  const categories = useMemo(() => availableCategories, [availableCategories])
+  const catalogSummary = useMemo(
+    () => `${catalogProducts.length} of ${totalProducts} products · ${new Set(catalogProducts.map((product) => product.category)).size} visible categories`,
+    [catalogProducts, totalProducts]
+  )
 
   const cartQuantityById = useMemo(() => {
     return items.reduce((cartMap, item) => {
@@ -103,7 +172,7 @@ const MainContent = () => {
   const visibleProducts = useMemo(() => {
     const searchTokens = getSearchTokens(filters.search)
 
-    return products
+    return catalogProducts
       .filter((product) => {
         const matchesCategory = filters.category === 'All' || product.category === filters.category
         const matchesPrice = getSalePrice(product) <= Number(filters.maxPrice)
@@ -114,10 +183,36 @@ const MainContent = () => {
       })
       .sort((firstProduct, secondProduct) => {
         if (filters.sortBy === 'price-low-high') return getSalePrice(firstProduct) - getSalePrice(secondProduct)
+        if (filters.sortBy === 'price-high-low') return getSalePrice(secondProduct) - getSalePrice(firstProduct)
         if (filters.sortBy === 'rating') return secondProduct.rating - firstProduct.rating
+        if (filters.sortBy === 'name-asc') return firstProduct.name.localeCompare(secondProduct.name)
         return new Date(secondProduct.createdAt) - new Date(firstProduct.createdAt)
       })
-  }, [filters])
+  }, [catalogProducts, filters])
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore) return
+
+    const nextSkip = catalogProducts.length
+    setIsLoadingMore(true)
+
+    try {
+      const response = await fetchProducts({
+        limit: 20,
+        skip: nextSkip,
+        category: filters.category === 'All' ? '' : filters.category,
+        q: filters.search
+      })
+
+      const mergedProducts = [...catalogProducts, ...response.items]
+      setCatalogProducts(mergedProducts)
+      setTotalProducts(response.total || mergedProducts.length)
+    } catch (error) {
+      setProductError('Unable to load more products. Please try again.')
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }
 
   const handleApplyCoupon = () => {
     const result = applyCartCoupon(couponCode)
@@ -429,7 +524,7 @@ const MainContent = () => {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">Shop Cart catalog</h2>
-            <p className="text-sm text-gray-500">Search, filter, and sort. Fashion and Books unlock FASHION20 and BOGOBOOKS.</p>
+            <p className="text-sm text-gray-500">{catalogSummary}. Search, filter, and sort.</p>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -482,66 +577,124 @@ const MainContent = () => {
                 onChange={(event) => setFilters({ sortBy: event.target.value })}
                 className="catalog-field"
               >
+                <option value="newest">Default</option>
                 <option value="price-low-high">Price low-high</option>
+                <option value="price-high-low">Price high-low</option>
                 <option value="rating">Rating</option>
-                <option value="newest">Newest</option>
+                <option value="name-asc">Name A-Z</option>
               </select>
             </label>
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {visibleProducts.map((product) => (
-            <article key={product.id} className="product-card">
-              <Link to={`/product/${product.id}`} className="block">
-                <div className="aspect-square overflow-hidden bg-gray-50">
-                  <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
+        {isLoadingProducts ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="overflow-hidden rounded-[22px] border border-slate-200 bg-white p-3">
+                <div className="animate-pulse rounded-[18px] bg-slate-200 aspect-square" />
+                <div className="mt-3 space-y-3">
+                  <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
+                  <div className="h-3 w-1/3 animate-pulse rounded bg-slate-200" />
+                  <div className="h-4 w-1/2 animate-pulse rounded bg-slate-200" />
+                  <div className="h-9 w-full animate-pulse rounded-xl bg-slate-200" />
                 </div>
-              </Link>
-
-              <div className="space-y-3 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <Link to={`/product/${product.id}`} className="font-semibold text-gray-800 hover:text-orange-600">
-                      {product.name}
-                    </Link>
-                    <p className="text-sm text-gray-500">{product.category}</p>
-                  </div>
-                  <span className="inline-flex shrink-0 items-center gap-1 bg-orange-50 px-2 py-1 text-sm font-semibold text-orange-700">
-                    <Star size={14} fill="currentColor" />
-                    {product.rating}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-3">
-                  <p>
-                    <span className="font-semibold text-gray-900">{formatRupees(getSalePrice(product))}</span>
-                    <span className="ml-2 text-sm text-gray-400 line-through">{formatRupees(product.originalPrice)}</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => addItem(product)}
-                    className="cart-action-button"
-                  >
-                    ADD CART
-                  </button>
-                </div>
-
-                {cartQuantityById[product.id] ? (
-                  <p className="text-xs font-medium text-green-700">
-                    {cartQuantityById[product.id]} in cart
-                  </p>
-                ) : null}
               </div>
-            </article>
-          ))}
-        </div>
-
-        {!visibleProducts.length ? (
-          <div className="mt-5 border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-            No products match your filters.
+            ))}
           </div>
-        ) : null}
+        ) : (
+          <>
+            {productError ? (
+              <div className="mt-5 flex flex-col items-start justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 sm:flex-row sm:items-center">
+                <span>{productError}</span>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-3 py-2 font-medium text-amber-700 transition hover:bg-amber-100"
+                >
+                  <RefreshCw size={14} />
+                  Retry
+                </button>
+              </div>
+            ) : null}
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {visibleProducts.map((product) => (
+                <article key={product.id} className="product-card">
+                  <Link to={`/product/${product.id}`} className="block">
+                    <div className="aspect-square overflow-hidden bg-gray-50">
+                      <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
+                    </div>
+                  </Link>
+
+                  <div className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <Link to={`/product/${product.id}`} className="block truncate font-semibold text-gray-800 hover:text-orange-600">
+                          {product.name}
+                        </Link>
+                        <p className="text-sm text-gray-500">{product.category}</p>
+                      </div>
+                      <span className="inline-flex shrink-0 items-center gap-1 bg-orange-50 px-2 py-1 text-sm font-semibold text-orange-700">
+                        <Star size={14} fill="currentColor" />
+                        {product.rating}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <p>
+                        <span className="font-semibold text-gray-900">{formatRupees(getSalePrice(product))}</span>
+                        <span className="ml-2 text-sm text-gray-400 line-through">{formatRupees(product.originalPrice)}</span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => addItem(product)}
+                        className="cart-action-button"
+                      >
+                        ADD CART
+                      </button>
+                    </div>
+
+                    {cartQuantityById[product.id] ? (
+                      <p className="text-xs font-medium text-green-700">
+                        {cartQuantityById[product.id]} in cart
+                      </p>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {!visibleProducts.length ? (
+              <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600">
+                <p className="text-base font-semibold text-slate-800">No products found</p>
+                <p className="mt-1">Try clearing your search or selecting another category.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('')
+                    setFilters({ search: '', category: 'All', sortBy: 'newest' })
+                  }}
+                  className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700"
+                >
+                  View all products
+                </button>
+              </div>
+            ) : null}
+
+            {!isLoadingProducts && catalogProducts.length < totalProducts ? (
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isLoadingMore ? 'Loading...' : `Load more (${totalProducts - catalogProducts.length} left)`}
+                </button>
+              </div>
+            ) : null}
+          </>
+        )}
       </section>
 
       <div id="cart-section" className="mt-8 scroll-mt-28 px-7.5 text-2xl font-semibold text-gray-800">

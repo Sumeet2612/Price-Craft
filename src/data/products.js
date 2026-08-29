@@ -105,7 +105,7 @@ export const products = [
   },
   {
     id: 7,
-    img:  linenshirt,
+    img: linenshirt,
     images: [Nike1, One8],
     name: 'Linen Resort Shirt',
     category: 'Fashion',
@@ -119,8 +119,85 @@ export const products = [
     stock: 22,
     description: 'Breathable linen shirt with a relaxed collar. Eligible for FASHION20.'
   }
-  
 ]
+
+export const normalizeApiProduct = (apiProduct) => {
+  const rawRating = typeof apiProduct?.rating === 'object' ? apiProduct.rating.rate : apiProduct?.rating
+  const price = Number(apiProduct?.price ?? 0)
+  const rating = Number(rawRating ?? 0)
+  const discountPercent = Number(apiProduct?.discountPercentage ?? 0)
+  const normalizedImages = Array.isArray(apiProduct?.images) && apiProduct.images.length
+    ? apiProduct.images
+    : [apiProduct?.thumbnail || apiProduct?.image].filter(Boolean)
+
+  const originalPrice = discountPercent > 0
+    ? Math.round(price / (1 - discountPercent / 100))
+    : price
+
+  return {
+    id: apiProduct.id,
+    img: apiProduct.thumbnail || apiProduct.image || normalizedImages[0],
+    images: normalizedImages,
+    name: apiProduct.title,
+    category: apiProduct.category,
+    color: apiProduct.color || 'Neutral',
+    size: apiProduct.size || 'M',
+    price,
+    originalPrice,
+    discountPercent,
+    rating,
+    createdAt: apiProduct.createdAt || new Date().toISOString(),
+    stock: Number(apiProduct.stock ?? 10),
+    description: apiProduct.description || ''
+  }
+}
+
+const readJson = async (url) => {
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error('Unable to load products right now.')
+  }
+
+  return response.json()
+}
+
+export const fetchCategories = async () => {
+  const data = await readJson('https://dummyjson.com/products/categories')
+
+  if (!Array.isArray(data)) return []
+
+  return data.map((category) => {
+    if (typeof category === 'string') return category
+    return category?.slug || category?.name || ''
+  }).filter(Boolean)
+}
+
+export const fetchProductById = async (id) => {
+  const data = await readJson(`https://dummyjson.com/products/${id}`)
+  return normalizeApiProduct(data)
+}
+
+export const fetchProducts = async ({ limit = 20, skip = 0, category = '', q = '' } = {}) => {
+  const params = new URLSearchParams({ limit: String(limit), skip: String(skip) })
+
+  let url = 'https://dummyjson.com/products'
+
+  if (q) {
+    url = 'https://dummyjson.com/products/search'
+    params.set('q', q)
+  } else if (category) {
+    url = `https://dummyjson.com/products/category/${encodeURIComponent(category)}`
+  }
+
+  const response = await readJson(`${url}?${params.toString()}`)
+
+  const payload = Array.isArray(response.products) ? response.products : []
+  return {
+    items: payload.map(normalizeApiProduct),
+    total: Number(response.total || payload.length)
+  }
+}
 
 export const getProductById = (id) =>
   products.find((product) => String(product.id) === String(id))

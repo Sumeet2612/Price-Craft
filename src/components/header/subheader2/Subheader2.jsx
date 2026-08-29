@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom'
 import { ChevronDown, Menu, MapPin, ShoppingBag, UserRound } from 'lucide-react'
 import logo from '../../../assets/image1.png'
 import { useCart } from '../../../context/CartContext'
+import { useAuth } from '../../../context/AuthContext'
 import '../Header.css'
 
 const Subheader2 = () => {
   const { itemCount } = useCart()
+  const { user, isAuthenticated } = useAuth()
 
   return (
     <div className='primary-navbar'>
@@ -39,10 +41,10 @@ const Subheader2 = () => {
           <ChevronDown className='h-3.5 w-3.5' />
         </button>
 
-        <button className='account-button' type='button' aria-label='Account'>
+        <Link to='/auth' className='account-button' aria-label='Account'>
           <UserRound className='h-4 w-4' />
-          <span>Account</span>
-        </button>
+          <span>{isAuthenticated && user ? user.name.split(' ')[0] : 'Account'}</span>
+        </Link>
 
         <Link to='/#cart-section' className='cart-icon-wrapper' aria-label='View cart'>
           <ShoppingBag className='h-5 w-5' />

@@ -1,23 +1,79 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ChevronRight, Minus, Plus, Star } from 'lucide-react'
-import { getProductById, getSalePrice } from '../data/products'
+import { ChevronRight, Minus, Plus, RefreshCw, Star } from 'lucide-react'
+import { fetchProductById, getProductById, getSalePrice } from '../data/products'
 import { useCart } from '../context/CartContext'
 
 const formatRupees = (value) => `Rs. ${Number(value).toFixed(2)}`
 
 const ProductDetail = () => {
   const { productId } = useParams()
-  const product = getProductById(productId)
   const { addItem, items } = useCart()
   const navigate = useNavigate()
+  const [product, setProduct] = useState(() => getProductById(productId))
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true)
+  const [productError, setProductError] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [activeImage, setActiveImage] = useState(product?.img)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadProduct = async () => {
+      setIsLoadingProduct(true)
+      setProductError('')
+
+      try {
+        const productFromApi = await fetchProductById(productId)
+        if (!isMounted) return
+
+        setProduct(productFromApi || getProductById(productId) || null)
+      } catch (error) {
+        if (!isMounted) return
+        setProduct(getProductById(productId) || null)
+        setProductError('We could not refresh this product. Please try again.')
+      } finally {
+        if (isMounted) {
+          setIsLoadingProduct(false)
+        }
+      }
+    }
+
+    loadProduct()
+
+    return () => {
+      isMounted = false
+    }
+  }, [productId])
+
+  useEffect(() => {
+    setActiveImage(product?.img)
+  }, [product])
 
   const inCart = useMemo(
     () => items.find((item) => String(item.productId) === String(productId))?.quantity || 0,
     [items, productId]
   )
+
+  if (isLoadingProduct) {
+    return (
+      <div className="px-4 py-16 sm:px-7.5">
+        <div className="mx-auto max-w-5xl animate-pulse rounded-3xl border border-slate-200 bg-white p-6">
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="h-[480px] rounded-2xl bg-slate-200" />
+            <div className="space-y-4">
+              <div className="h-4 w-24 rounded bg-slate-200" />
+              <div className="h-8 w-3/4 rounded bg-slate-200" />
+              <div className="h-4 w-1/3 rounded bg-slate-200" />
+              <div className="h-20 rounded bg-slate-200" />
+              <div className="h-8 w-1/3 rounded bg-slate-200" />
+              <div className="h-10 w-full rounded bg-slate-200" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!product) {
     return (
@@ -41,18 +97,34 @@ const ProductDetail = () => {
         <span className="text-gray-700">{product.name}</span>
       </div>
 
+      {productError ? (
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span>{productError}</span>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-medium text-amber-700 transition hover:bg-amber-100"
+          >
+            <RefreshCw size={14} />
+            Retry
+          </button>
+        </div>
+      ) : null}
+
       <div className="mt-8 grid gap-8 bg-white p-6 lg:grid-cols-2">
         <div>
-          <img src={activeImage || product.img} alt={product.name} className="aspect-square w-full object-cover" />
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+            <img src={activeImage || product.img} alt={product.name} className="aspect-square w-full object-cover" />
+          </div>
           <div className="mt-3 flex gap-3">
             {(product.images || [product.img]).map((image) => (
               <button
                 key={image}
                 type="button"
                 onClick={() => setActiveImage(image)}
-                className={`h-16 w-16 overflow-hidden border ${activeImage === image ? 'border-orange-500' : 'border-gray-200'}`}
+                className={`h-16 w-16 overflow-hidden rounded-xl border ${activeImage === image ? 'border-orange-500 ring-2 ring-orange-100' : 'border-slate-200'}`}
               >
-                <img src={image} alt="" className="h-full w-full object-cover" />
+                <img src={image} alt={`${product.name} thumbnail`} className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
